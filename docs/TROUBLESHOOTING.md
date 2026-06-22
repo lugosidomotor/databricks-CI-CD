@@ -19,13 +19,11 @@ databricks bundle validate --target dev
 In CI, check the GitHub Environment variables, `id-token: write` permission, and the
 subject configured in the Databricks federation policy.
 
-## The node type does not exist
+## The workspace supports only serverless compute
 
-The default is Azure-specific. Override it with an available workspace node:
-
-```bash
-export BUNDLE_VAR_node_type_id=<available-workspace-node>
-```
+The included jobs already use serverless environments. If this error appears after an
+upgrade, confirm that no task defines `new_cluster`, `existing_cluster_id`, or
+`job_cluster_key`, and that every Python wheel task has an `environment_key`.
 
 ## The job cannot create a schema
 
@@ -47,4 +45,3 @@ The wheel-based jobs are independent of this pipeline.
 
 This is expected. A table created by runtime code is not a bundle-managed resource.
 Remove the training schemas separately with the cleanup SQL in the README.
-

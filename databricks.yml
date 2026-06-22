@@ -21,12 +21,6 @@ variables:
   pipeline_schema:
     description: Target schema managed by the declarative pipeline.
     default: dbx_cicd_pipeline_dev
-  spark_version:
-    description: Databricks Runtime version used by job compute.
-    default: 15.4.x-scala2.12
-  node_type_id:
-    description: Compute node type; the default value is intended for Azure.
-    default: Standard_D4s_v5
   secret_scope:
     description: Secret scope used by the manually triggered secret example.
     default: dbx-cicd-sample

@@ -73,8 +73,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the design rationale.
 - Databricks CLI 0.275.0 or newer.
 - A Databricks workspace with Unity Catalog enabled.
 - An existing catalog in which the run identity can create schemas and tables.
-- The `Standard_D4s_v5` node type on Azure, or an appropriate `node_type_id` override
-  for another cloud.
+- Serverless Jobs and Lakeflow Spark Declarative Pipelines enabled in the workspace.
 
 ## 1. Run local checks
 
@@ -110,11 +109,10 @@ identity federation, so it does not require a long-lived Databricks client secre
 
 ## 3. Validate, deploy, and run in dev
 
-Set your catalog and, if necessary, the compute node type:
+Set the Unity Catalog catalog used by the sample:
 
 ```bash
 export BUNDLE_VAR_catalog=main
-export BUNDLE_VAR_node_type_id=Standard_D4s_v5
 
 databricks bundle validate --target dev
 databricks bundle deploy --target dev
@@ -220,9 +218,8 @@ DROP SCHEMA IF EXISTS main.`dbx_cicd_pipeline_<user>` CASCADE;
 1. Change the sample data so that the quality task fails.
 2. Add a task that runs only after `gold` succeeds.
 3. Create an isolated deployment target for feature branches.
-4. Replace classic job compute with a serverless job environment.
+4. Upgrade the pinned serverless environment version after reviewing compatibility.
 5. Add a staging release workflow before production.
 6. Manage the schemas as explicit Unity Catalog bundle resources.
 
 See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) when a local or remote step fails.
-

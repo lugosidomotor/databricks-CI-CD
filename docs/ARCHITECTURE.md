@@ -40,13 +40,12 @@ different service principals with different permissions.
 
 ## Compute
 
-The three transformation tasks and quality gate share one `job_cluster_key`. One cluster
-therefore starts per job run rather than one cluster per task. The sample uses a
-single-node Azure configuration to reduce training costs. Override `node_type_id` or the
-complete `new_cluster` block for another cloud, policy, or workload size.
+All Python wheel tasks use serverless compute. Each job defines one job-level environment,
+and its tasks reference that environment through `environment_key`. The wheel is installed
+through the environment dependency list instead of a classic cluster library block.
 
-The declarative pipeline requests serverless compute. If the workspace does not support
-it, configure classic pipeline compute or remove that example resource.
+The declarative pipeline also requests serverless compute, so the complete sample works
+in workspaces that permit serverless resources only.
 
 ## Idempotency
 
@@ -63,4 +62,3 @@ ingestion, checkpoints, `MERGE`, Auto Loader, or declarative streaming tables.
 - GitHub OIDC: short-lived CI authentication without a stored Databricks client secret.
 
 Never place a secret value in `databricks.yml`, `.env.example`, task parameters, or logs.
-

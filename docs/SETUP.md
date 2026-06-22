@@ -5,7 +5,7 @@
 The developer or runtime service principal needs at least:
 
 - Workspace access and permission to create jobs.
-- Permission to use the configured compute policy or create clusters.
+- Permission to run serverless Jobs.
 - `USE CATALOG` on the selected catalog.
 - `CREATE SCHEMA` on the catalog.
 - Permission to use and write the resulting schemas and tables.
@@ -14,17 +14,15 @@ The developer or runtime service principal needs at least:
 Do not grant account-admin or workspace-admin permissions to the CI identity in a real
 production setup.
 
-## 2. Cloud-specific compute
+## 2. Serverless compute
 
-The default node type targets Azure:
+The wheel jobs define a job-level serverless environment and install the bundle wheel as
+an environment dependency. Python wheel tasks must reference that environment through
+`environment_key`; they do not define `new_cluster`, `existing_cluster_id`, or
+`job_cluster_key`.
 
-```bash
-export BUNDLE_VAR_node_type_id=Standard_D4s_v5
-```
-
-Choose a node type available in your workspace when using AWS or GCP. If a cluster
-policy is mandatory, add its `policy_id` to each `new_cluster` block. Do not override
-fields that the policy fixes to specific values.
+The sample pins environment version 2 for broad compatibility. Review Databricks
+serverless environment release notes before changing that version.
 
 ## 3. Secret example
 

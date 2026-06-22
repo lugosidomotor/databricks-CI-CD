@@ -11,22 +11,15 @@ resources:
           default: ${var.schema}
         - name: run_id
           default: "{{job.run_id}}"
-      job_clusters:
-        - job_cluster_key: report_cluster
-          new_cluster:
-            spark_version: ${var.spark_version}
-            node_type_id: ${var.node_type_id}
-            num_workers: 0
-            data_security_mode: SINGLE_USER
-            spark_conf:
-              spark.databricks.cluster.profile: singleNode
-              spark.master: local[*, 4]
-            custom_tags:
-              ResourceClass: SingleNode
-              project: dbx-cicd-sample
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"
+            dependencies:
+              - ../dist/*.whl
       tasks:
         - task_key: show_report
-          job_cluster_key: report_cluster
+          environment_key: default
           python_wheel_task:
             package_name: dbx_cicd_sample
             entry_point: report
@@ -37,5 +30,3 @@ resources:
               - "{{job.parameters.schema}}"
               - --run-id
               - "{{job.parameters.run_id}}"
-          libraries:
-            - whl: ../dist/*.whl
