@@ -45,6 +45,9 @@ receive the notebook-global `dbutils` object, so this example creates a
 
 ## 4. Production run identity
 
+The bundle contains a sentinel default so `dev` validation does not require a production
+service principal. Always override it for `staging` and `prod`:
+
 ```bash
 export BUNDLE_VAR_service_principal_id=<application-id>
 databricks bundle validate --target prod
@@ -54,4 +57,3 @@ databricks bundle deploy --target prod
 The deployment identity must be allowed to use the configured service principal. Give
 the runtime service principal only the data and compute permissions it needs; it should
 not receive unrelated administrative permissions.
-

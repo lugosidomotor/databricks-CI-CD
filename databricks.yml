@@ -34,7 +34,8 @@ variables:
     description: Secret key used by the manually triggered secret example.
     default: sample-secret
   service_principal_id:
-    description: Application ID of the staging/prod run identity; pass it as a BUNDLE_VAR.
+    description: Application ID of the staging/prod run identity; override the sentinel value.
+    default: REQUIRED_FOR_STAGING_AND_PROD
 
 targets:
   dev:
