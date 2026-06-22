@@ -9,32 +9,32 @@ artifacts:
   default:
     type: whl
     path: .
-    build: python -m build --wheel
+    build: uv build --wheel
 
 variables:
   catalog:
-    description: Meglévő Unity Catalog katalógus, amelybe a minta sémái kerülnek.
+    description: Existing Unity Catalog catalog where the sample schemas are created.
     default: main
   schema:
-    description: A wheel-alapú medallion job célsémája.
+    description: Target schema for the wheel-based medallion job.
     default: dbx_cicd_dev
   pipeline_schema:
-    description: A deklaratív pipeline által kezelt célséma.
+    description: Target schema managed by the declarative pipeline.
     default: dbx_cicd_pipeline_dev
   spark_version:
-    description: A job compute Databricks Runtime verziója.
+    description: Databricks Runtime version used by job compute.
     default: 15.4.x-scala2.12
   node_type_id:
-    description: Compute node típus; az alapérték Azure-höz készült.
+    description: Compute node type; the default value is intended for Azure.
     default: Standard_D4s_v5
   secret_scope:
-    description: A kézzel indítható secret-példa scope-ja.
+    description: Secret scope used by the manually triggered secret example.
     default: dbx-cicd-sample
   secret_key:
-    description: A kézzel indítható secret-példa kulcsa.
+    description: Secret key used by the manually triggered secret example.
     default: sample-secret
   service_principal_id:
-    description: Staging/prod futtatási identitás application ID-ja; add át BUNDLE_VAR-ként.
+    description: Application ID of the staging/prod run identity; pass it as a BUNDLE_VAR.
 
 targets:
   dev:
@@ -82,4 +82,3 @@ targets:
         medallion_job:
           schedule:
             pause_status: UNPAUSED
-

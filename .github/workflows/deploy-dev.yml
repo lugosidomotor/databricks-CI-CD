@@ -1,0 +1,56 @@
+name: Deploy dev
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: dbx-cicd-sample-dev
+  cancel-in-progress: true
+
+jobs:
+  deploy-and-smoke-test:
+    runs-on: ubuntu-latest
+    environment: dev
+    env:
+      DATABRICKS_AUTH_TYPE: github-oidc
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ vars.DATABRICKS_CLIENT_ID }}
+      BUNDLE_VAR_catalog: ${{ vars.DATABRICKS_CATALOG }}
+      BUNDLE_VAR_service_principal_id: ${{ vars.DATABRICKS_CLIENT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+
+      - name: Install build dependencies
+        run: uv sync --locked --extra dev
+
+      - name: Quality gate
+        run: |
+          uv run ruff format --check .
+          uv run ruff check .
+          uv run pytest
+
+      - name: Install Databricks CLI
+        uses: databricks/setup-cli@v0.299.2
+
+      - name: Validate dev bundle
+        run: databricks bundle validate --target dev
+
+      - name: Deploy dev bundle
+        run: databricks bundle deploy --target dev
+
+      - name: Run medallion smoke test
+        run: databricks bundle run --target dev medallion_job

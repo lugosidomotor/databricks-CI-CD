@@ -33,7 +33,7 @@ resources:
               project: dbx-cicd-sample
       tasks:
         - task_key: bronze
-          description: Determinisztikus minta rendelések betöltése Delta táblába.
+          description: Load deterministic sample orders into a Delta table.
           job_cluster_key: sample_cluster
           python_wheel_task:
             package_name: dbx_cicd_sample
@@ -51,7 +51,7 @@ resources:
           min_retry_interval_millis: 10000
 
         - task_key: silver
-          description: Típuskonverzió, validálás és deduplikáció.
+          description: Apply type conversion, validation, and deduplication.
           depends_on:
             - task_key: bronze
           job_cluster_key: sample_cluster
@@ -64,7 +64,7 @@ resources:
           min_retry_interval_millis: 10000
 
         - task_key: gold
-          description: Napi és országonkénti üzleti aggregáció.
+          description: Build daily business aggregates by country.
           depends_on:
             - task_key: silver
           job_cluster_key: sample_cluster
@@ -77,7 +77,7 @@ resources:
           min_retry_interval_millis: 10000
 
         - task_key: quality
-          description: Fail-fast adatminőségi kapu a Gold tábla után.
+          description: Run a fail-fast data quality gate after the Gold task.
           depends_on:
             - task_key: gold
           job_cluster_key: sample_cluster
@@ -86,4 +86,3 @@ resources:
             entry_point: quality
             parameters: *task_parameters
           libraries: *sample_wheel
-

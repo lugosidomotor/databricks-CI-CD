@@ -1,4 +1,4 @@
-"""Silver task: tisztítás, típusosítás és deduplikáció."""
+"""Silver task: clean, type, and deduplicate records."""
 
 from __future__ import annotations
 
@@ -45,4 +45,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

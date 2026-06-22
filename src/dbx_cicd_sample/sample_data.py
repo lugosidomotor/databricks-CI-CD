@@ -1,4 +1,4 @@
-"""Kicsi, determinisztikus bemeneti adat a tanulási példához."""
+"""Small deterministic input dataset for the educational sample."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ RAW_ORDER_SCHEMA = (
 
 
 def sample_orders() -> list[RawOrder]:
-    """Szándékosan tartalmaz duplikátumot és hibás rekordokat."""
+    """Return records with intentional duplicates and invalid values."""
     return [
         {
             "order_id": "O-1001",
@@ -80,4 +80,3 @@ def sample_orders() -> list[RawOrder]:
             "status": "COMPLETED",
         },
     ]
-

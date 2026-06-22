@@ -1,7 +1,7 @@
 # Databricks notebook source
-"""Önálló, opcionálisan futtatható deklaratív pipeline-példa.
+"""Standalone, optional declarative pipeline example.
 
-Az ``import dlt`` elnevezés visszafelé kompatibilis API. Az új terméknév
+The ``import dlt`` name is a backward-compatible API. The current product name is
 Lakeflow Spark Declarative Pipelines.
 """
 
@@ -11,10 +11,10 @@ from pyspark.sql import functions as F
 
 spark = SparkSession.getActiveSession()
 if spark is None:
-    raise RuntimeError("A pipeline futtatásához aktív SparkSession szükséges.")
+    raise RuntimeError("An active SparkSession is required to run the pipeline.")
 
 
-@dlt.table(name="pipeline_raw_orders", comment="Deklaratív pipeline nyers mintaadata")
+@dlt.table(name="pipeline_raw_orders", comment="Raw sample data for the pipeline")
 def raw_orders():
     rows = [
         ("P-1001", "2026-01-15T08:30:00Z", "HU", 100.0),
@@ -26,19 +26,20 @@ def raw_orders():
     return spark.createDataFrame(rows, schema=schema)
 
 
-@dlt.table(name="pipeline_clean_orders", comment="Elvárásokkal tisztított rendelések")
+@dlt.table(name="pipeline_clean_orders", comment="Orders cleaned with expectations")
 @dlt.expect_or_drop("valid_amount", "amount > 0")
 @dlt.expect_or_drop("valid_timestamp", "order_timestamp IS NOT NULL")
 def clean_orders():
-    return dlt.read("pipeline_raw_orders").withColumn(
-        "order_timestamp", F.to_timestamp("order_ts")
-    )
+    return dlt.read("pipeline_raw_orders").withColumn("order_timestamp", F.to_timestamp("order_ts"))
 
 
-@dlt.table(name="pipeline_country_summary", comment="Országonkénti aggregáció")
+@dlt.table(name="pipeline_country_summary", comment="Order aggregates by country")
 def country_summary():
-    return dlt.read("pipeline_clean_orders").groupBy("country").agg(
-        F.countDistinct("order_id").alias("order_count"),
-        F.round(F.sum("amount"), 2).alias("revenue"),
+    return (
+        dlt.read("pipeline_clean_orders")
+        .groupBy("country")
+        .agg(
+            F.countDistinct("order_id").alias("order_count"),
+            F.round(F.sum("amount"), 2).alias("revenue"),
+        )
     )
-

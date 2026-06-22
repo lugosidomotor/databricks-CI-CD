@@ -1,4 +1,4 @@
-"""Secret scope használata wheel taskból, titok naplózása nélkül."""
+"""Use a secret scope from a wheel task without logging the secret value."""
 
 from __future__ import annotations
 
@@ -20,10 +20,9 @@ def main() -> None:
         key=args.key,
     )
     if not secret:
-        raise RuntimeError("A secret létezik, de üres.")
+        raise RuntimeError("The secret exists but is empty.")
     log_event("secret_read_successfully", scope=args.scope, key=args.key)
 
 
 if __name__ == "__main__":
     main()
-

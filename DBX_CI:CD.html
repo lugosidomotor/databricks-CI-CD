@@ -202,17 +202,17 @@
 
         <div class="card">
             <h2>4. Multi-Engineer Parallel Git Workflow</h2>
-            <p>When 3 engineers (Anna, Balázs, and Cecil) contribute to the identical code repository concurrently within the Dev Workspace, DAB development mechanics ensure isolation:</p>
+            <p>When 3 engineers (Anna, Ben, and Cecil) contribute to the identical code repository concurrently within the Dev Workspace, DAB development mechanics ensure isolation:</p>
             <ol>
                 <li><strong>Separate Checkouts:</strong> Every contributor pulls down code into their localized directory spaces:
                     <ul>
                         <li><code>/Workspace/Users/anna@company.com/hello-world-pipeline</code></li>
-                        <li><code>/Workspace/Users/balazs@company.com/hello-world-pipeline</code></li>
+                        <li><code>/Workspace/Users/ben@company.com/hello-world-pipeline</code></li>
                         <li><code>/Workspace/Users/cecil@company.com/hello-world-pipeline</code></li>
                     </ul>
                 </li>
                 <li><strong>Execution Sandbox:</strong> When Anna makes modifications to a local step and executes <code>databricks bundle deploy -t dev</code>, DAB processes her unique auth token. Because the target is configured with <code>mode: development</code>, DAB flags the deployment as isolated, appending her identity onto the resource names (e.g., creating <code>dev_hello_world_workflow_anna</code>).</li>
-                <li><strong>Collision Prevention:</strong> Balázs and Cecil run identical terminal operations concurrently. Their adjustments compile cleanly into separate testing workflows without intercepting, modifying, or breaking Anna's isolated pipeline runs.</li>
+                <li><strong>Collision Prevention:</strong> Ben and Cecil run identical terminal operations concurrently. Their adjustments compile cleanly into separate testing workflows without intercepting, modifying, or breaking Anna's isolated pipeline runs.</li>
             </ol>
         </div>
 

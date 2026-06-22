@@ -2,7 +2,7 @@ resources:
   jobs:
     report_job:
       name: dbx-cicd-sample-report
-      description: Külön, kézzel indítható job a Gold eredmény megtekintéséhez.
+      description: Separate manually triggered job for viewing the Gold result.
       max_concurrent_runs: 1
       parameters:
         - name: catalog
@@ -39,4 +39,3 @@ resources:
               - "{{job.parameters.run_id}}"
           libraries:
             - whl: ../dist/*.whl
-

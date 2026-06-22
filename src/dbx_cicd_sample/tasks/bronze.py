@@ -1,4 +1,4 @@
-"""Bronze task: nyers mintaadat idempotens betöltése Delta táblába."""
+"""Bronze task: load raw sample data idempotently into a Delta table."""
 
 from __future__ import annotations
 
@@ -31,4 +31,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

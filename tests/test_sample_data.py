@@ -27,4 +27,3 @@ def test_valid_sample_orders_have_expected_business_total() -> None:
     assert len(unique) == 3
     assert sum(row["amount"] for row in unique.values()) == 175.0
     assert "order_id STRING" in RAW_ORDER_SCHEMA
-

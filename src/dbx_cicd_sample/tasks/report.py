@@ -1,4 +1,4 @@
-"""Külön job entry point a Gold eredmény emberi olvasásához."""
+"""Separate job entry point for displaying the Gold result."""
 
 from __future__ import annotations
 
@@ -19,4 +19,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

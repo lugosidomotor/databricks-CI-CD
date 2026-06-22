@@ -15,11 +15,10 @@ resources:
   jobs:
     pipeline_orchestrator_job:
       name: dbx-cicd-sample-pipeline-orchestrator
-      description: Megmutatja, hogyan indít Lakeflow Jobs egy deklaratív pipeline-t.
+      description: Demonstrates how a Lakeflow Job starts a declarative pipeline.
       max_concurrent_runs: 1
       tasks:
         - task_key: refresh_declarative_pipeline
           pipeline_task:
             pipeline_id: ${resources.pipelines.orders_declarative_pipeline.id}
             full_refresh: false
-

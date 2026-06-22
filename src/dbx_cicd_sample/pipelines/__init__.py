@@ -1,2 +1,1 @@
-"""Lakeflow Spark Declarative Pipelines példák."""
-
+"""Lakeflow Spark Declarative Pipelines examples."""

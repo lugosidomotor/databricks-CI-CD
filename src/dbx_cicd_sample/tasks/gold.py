@@ -1,4 +1,4 @@
-"""Gold task: napi, országonkénti üzleti aggregáció."""
+"""Gold task: build daily business aggregates by country."""
 
 from __future__ import annotations
 
@@ -35,4 +35,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

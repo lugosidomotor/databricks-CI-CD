@@ -1,4 +1,4 @@
-"""Quality gate: hibás output esetén a teljes job fusson failed állapotba."""
+"""Quality gate: fail the complete job when its output is invalid."""
 
 from __future__ import annotations
 
@@ -22,19 +22,18 @@ def main() -> None:
 
     failures: list[str] = []
     if metrics["row_count"] == 0:
-        failures.append("A Gold tábla üres.")
+        failures.append("The Gold table is empty.")
     if metrics["invalid_revenue_rows"] > 0:
-        failures.append("A Gold táblában nem pozitív revenue található.")
+        failures.append("The Gold table contains non-positive revenue.")
     if metrics["order_count"] != 3:
-        failures.append(f"3 érvényes rendelés helyett {metrics['order_count']} található.")
+        failures.append(f"Expected 3 valid orders, found {metrics['order_count']}.")
     if float(metrics["revenue"] or 0) != 175.0:
-        failures.append(f"Az elvárt 175.0 revenue helyett {metrics['revenue']} található.")
+        failures.append(f"Expected revenue of 175.0, found {metrics['revenue']}.")
 
     log_event("quality_checked", table=target, failures=failures, metrics=metrics.asDict())
     if failures:
-        raise RuntimeError("Adatminőségi ellenőrzés sikertelen: " + " ".join(failures))
+        raise RuntimeError("Data quality check failed: " + " ".join(failures))
 
 
 if __name__ == "__main__":
     main()
-

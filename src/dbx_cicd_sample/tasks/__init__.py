@@ -1,2 +1,1 @@
-"""Python wheel entry pointok a Lakeflow Job taskjaihoz."""
-
+"""Python wheel entry points for Lakeflow Job tasks."""
