@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Databricks Python CI/CD Architecture Guide</title>
+    <style>
+        :root {
+            --bg-color: #f4f6f8;
+            --card-bg: #ffffff;
+            --text-color: #2d3748;
+            --primary-color: #ff4f00; /* Databricks Orange */
+            --secondary-color: #111827;
+            --accent-blue: #2563eb;
+            --border-color: #e5e7eb;
+            --code-bg: #1e1e1e;
+            --code-text: #d4d4d4;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 3rem 1.5rem;
+            text-align: center;
+            border-bottom: 5px solid var(--primary-color);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        header p {
+            margin: 0.75rem 0 0 0;
+            opacity: 0.85;
+            font-size: 1.2rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 3rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+
+        h2 {
+            color: var(--secondary-color);
+            font-size: 1.75rem;
+            margin-top: 0;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            color: var(--secondary-color);
+            font-size: 1.25rem;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p, ul, ol {
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        ul, ol {
+            padding-left: 1.5rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 1.25rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.9rem;
+            margin: 1.5rem 0;
+        }
+
+        code {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            background-color: #f1f5f9;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: #b91c1c;
+        }
+
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+        }
+
+        .highlight-box {
+            background-color: #eff6ff;
+            border-left: 4px solid var(--accent-blue);
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 0 6px 6px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Databricks Python CI/CD Architecture Guide</h1>
+        <p>Best Practices with Databricks Asset Bundles (DAB), Jobs, and Multi-Env Deployments</p>
+    </header>
+
+    <div class="container">
+
+        <div class="card">
+            <h2>1. Pipeline vs. Jobs – Clearing the Confusion</h2>
+            <p>While both components run code artifacts, their design architectural patterns serve entirely different purposes:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Feature</th>
+                        <th>Databricks Jobs (Workflows)</th>
+                        <th>Delta Live Tables (DLT) Pipelines</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Primary Role</strong></td>
+                        <td>A general-purpose task orchestrator (DAG). Manages when and what runs.</td>
+                        <td>A declarative framework purpose-built for data streaming, ingestion, and robust ETL.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Supported Formats</strong></td>
+                        <td>Notebooks, Python Scripts, Wheel files, DLT Pipelines, SQL, dbt, etc.</td>
+                        <td>Exclusively Python/SQL structures utilizing the <code>dlt</code> framework library.</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Infrastructure</strong></td>
+                        <td>Triggers workloads across customizable clusters (classic, job, or serverless).</td>
+                        <td>Abstracts compute, dynamically managing scaling and underlying schema changes automatically.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h2>2. Workspaces & Git Repository Checkouts</h2>
+            <p>The enterprise best practice is to separate your lifecycle environments into <strong>two distinct Databricks Workspaces</strong> (e.g., a Dev Workspace and a Prod Workspace) to guarantee strict security and data isolation boundaries.</p>
+            
+            <h3>Where should code be checked out?</h3>
+            <ul>
+                <li><strong>Dev Workspace:</strong> Developers clone the corporate Git repository directly into their personal sandbox area under <code>/Workspace/Users/user@company.com/projects/...</code> inside <strong>Git Folders</strong> (formerly Repos) for active engineering, testing, and debugging.</li>
+                <li><strong>Prod Workspace:</strong> <strong>Never perform manual Git operations or checkouts on production infrastructure.</strong> Production workflows rely entirely on automated continuous integration runners. The CI/CD system packages, bundles, and pushes frozen code artifacts into internal storage or Unity Catalog Volumes, referencing files securely by distinct deployment versions.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2>3. Understanding Databricks Asset Bundles (DAB)</h2>
+            <p><strong>Databricks Asset Bundles (DAB)</strong> represent the official Infrastructure-as-Code (IaC) implementation tool tailored specifically for Databricks ecosystem deployments. Similar to how Terraform structures underlying cloud services, a single <code>databricks.yml</code> template explicitly defines your target environments, resource schemas, variables, and step sequences.</p>
+            <p>When running a deployment, DAB automatically compresses local script packages, transports them securely to targeted environment directories, and hooks up the cloud jobs seamlessly via native APIs.</p>
+        </div>
+
+        <div class="card">
+            <h2>4. Multi-Engineer Parallel Git Workflow</h2>
+            <p>When 3 engineers (Anna, Balázs, and Cecil) contribute to the identical code repository concurrently within the Dev Workspace, DAB development mechanics ensure isolation:</p>
+            <ol>
+                <li><strong>Separate Checkouts:</strong> Every contributor pulls down code into their localized directory spaces:
+                    <ul>
+                        <li><code>/Workspace/Users/anna@company.com/hello-world-pipeline</code></li>
+                        <li><code>/Workspace/Users/balazs@company.com/hello-world-pipeline</code></li>
+                        <li><code>/Workspace/Users/cecil@company.com/hello-world-pipeline</code></li>
+                    </ul>
+                </li>
+                <li><strong>Execution Sandbox:</strong> When Anna makes modifications to a local step and executes <code>databricks bundle deploy -t dev</code>, DAB processes her unique auth token. Because the target is configured with <code>mode: development</code>, DAB flags the deployment as isolated, appending her identity onto the resource names (e.g., creating <code>dev_hello_world_workflow_anna</code>).</li>
+                <li><strong>Collision Prevention:</strong> Balázs and Cecil run identical terminal operations concurrently. Their adjustments compile cleanly into separate testing workflows without intercepting, modifying, or breaking Anna's isolated pipeline runs.</li>
+            </ol>
+        </div>
+
+        <div class="card">
+            <h2>5. Concrete Multi-Task <code>databricks.yml</code> Definition</h2>
+            <p>Below is the specific structural configuration specifying how a 3-task continuous chain is modeled using clean relative paths:</p>
+            <pre><code>bundle:
+  name: hello-world-pipeline
+
+targets:
+  dev:
+    workspace:
+      host: https://adb-dev.azuredatabricks.net
+    mode: development 
+
+  prod:
+    workspace:
+      host: https://adb-prod.azuredatabricks.net
+    mode: production
+
+resources:
+  jobs:
+    hello_world_job:
+      name: "HelloWorld_Workflow_${bundle.target}"
+      
+      tasks:
+        # Task 1: Ingestion Entry Point
+        - task_key: run_hello
+          new_cluster:
+            spark_version: "14.3.x-scala2.12"
+            node_type_id: "Standard_D4s_v5"
+            num_workers: 1
+          spark_python_task:
+            python_file: ./src/task1_hello.py
+
+        # Task 2: Processing (Dependent on Task 1)
+        - task_key: run_world
+          depends_on:
+            - task_key: run_hello
+          new_cluster:
+            spark_version: "14.3.x-scala2.12"
+            node_type_id: "Standard_D4s_v5"
+            num_workers: 1
+          spark_python_task:
+            python_file: ./src/task2_world.py
+
+        # Task 3: Reporting (Dependent on Task 2)
+        - task_key: run_summary
+          depends_on:
+            - task_key: run_world
+          new_cluster:
+            spark_version: "14.3.x-scala2.12"
+            node_type_id: "Standard_D4s_v5"
+            num_workers: 1
+          spark_python_task:
+            python_file: ./src/task3_summary.py</code></pre>
+
+            <div class="highlight-box">
+                <strong>How relative files are mapped:</strong> Notice the <code>python_file: ./src/task1_hello.py</code> property. When building your target states, DAB automatically picks up the local directory paths, streams them safely into target storage structures (e.g., workspace roots or private enterprise Volumes), and replaces them dynamically with absolute internal paths (e.g., <code>/Workspace/Shared/.bundle/...</code>) to ensure the job runs flawlessly without any real-time Git access dependencies.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>6. Environmental Parameter Management</h2>
+            <p>To safely isolate environment states without creating complex hardcoded code branches, variables are structured into global blueprints, overrode at the execution target block, and passed down into tasks via standard runtime environment arrays.</p>
+            
+            <h3>Advanced <code>databricks.yml</code> Parameter Integration</h3>
+            <pre><code>bundle:
+  name: hello-world-pipeline
+
+# Define the variable blueprint variables globally
+variables:
+  storage_account_name:
+    type: string
+  subscription_id:
+    type: string
+  sp_client_id:
+    type: string
+  secret_scope_name:
+    type: string
+
+targets:
+  dev:
+    workspace:
+      host: https://adb-dev.azuredatabricks.net
+    mode: development
+    variables:
+      storage_account_name: "mystorageaccountdev"
+      subscription_id: "11111111-2222-3333-4444-555555555555"
+      sp_client_id: "aaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+      secret_scope_name: "dev-secrets-scope"
+
+  prod:
+    workspace:
+      host: https://adb-prod.azuredatabricks.net
+    mode: production
+    variables:
+      storage_account_name: "mystorageaccountprod"
+      subscription_id: "99999999-8888-7777-6666-555555555555"
+      sp_client_id: "zzzzzzz-yyyy-xxxx-wwww-vvvvvvvvvvvv"
+      secret_scope_name: "prod-secrets-scope"
+
+resources:
+  jobs:
+    hello_world_job:
+      name: "HelloWorld_Workflow_${bundle.target}"
+      tasks:
+        - task_key: run_summary
+          new_cluster:
+            spark_version: "14.3.x-scala2.12"
+            node_type_id: "Standard_D4s_v5"
+            num_workers: 1
+            
+            # Injecting variables as OS environment handles to the cluster
+            spark_env_vars:
+              STORAGE_ACCOUNT: ${var.storage_account_name}
+              SUB_ID: ${var.subscription_id}
+              SP_CLIENT_ID: ${var.sp_client_id}
+              SECRET_SCOPE: ${var.secret_scope_name}
+              
+          spark_python_task:
+            python_file: ./src/task3_summary.py</code></pre>
+        </div>
+
+        <div class="card">
+            <h2>7. Consuming Variables and Secrets inside Python</h2>
+            <p>Sensitive data points (such as the Service Principal's secret password) are never hardcoded or stored inside text configurations. Instead, they are referenced securely through the Databricks Secret Scope Vault, pulled down dynamically on-the-fly during active cluster compute lifecycles:</p>
+            <pre><code>import os
+from pyspark.sql import SparkSession
+
+# 1. Access non-sensitive configurations from environment handles
+storage_account = os.environ.get("STORAGE_ACCOUNT")
+subscription_id = os.environ.get("SUB_ID")
+client_id = os.environ.get("SP_CLIENT_ID")
+secret_scope = os.environ.get("SECRET_SCOPE")
+
+spark = SparkSession.builder.getOrCreate()
+
+# 2. Extract highly protected application passwords from the Secret Manager
+client_secret = dbutils.secrets.get(scope=secret_scope, key="sp-client-secret")
+
+# 3. Apply drivers configurations dynamically depending on target contexts
+spark.conf.set(
+    f"fs.azure.account.auth.type.{storage_account}.dfs.core.windows.net", 
+    "OAuth"
+)
+spark.conf.set(
+    f"fs.azure.account.oauth.provider.type.{storage_account}.dfs.core.windows.net", 
+    "org.apache.hadoop.fs.azurebfs.oauth2.AzureADAuthenticator"
+)
+spark.conf.set(
+    f"fs.azure.account.oauth2.client.id.{storage_account}.dfs.core.windows.net", 
+    client_id
+)
+spark.conf.set(
+    f"fs.azure.account.oauth2.client.secret.{storage_account}.dfs.core.windows.net", 
+    client_secret
+)
+spark.conf.set(
+    f"fs.azure.account.oauth2.client.endpoint.{storage_account}.dfs.core.windows.net", 
+    f"https://login.microsoftonline.com/{subscription_id}/oauth2/token"
+)
+
+# Read or Write datasets smoothly across isolated targets
+data_path = f"abfss://container-name@{storage_account}.dfs.core.windows.net/refined_analytics"
+print(f"Executing decoupled cloud storage task targeting: {data_path}")</code></pre>
+        </div>
+
+        <div class="card">
+            <h2>8. Automated CI/CD Execution Pipeline (GitHub Actions)</h2>
+            <p>When engineering milestones are merged straight into the <code>main</code> code branch, the automated release pipelines pick up changes, run unit validations, authenticate as a secure Service Principal account identity, and apply the infrastructure mutations cleanly:</p>
+            <pre><code>name: Production Deployment Automation
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Databricks Asset CLI
+        uses: databricks/setup-cli@v1
+
+      - name: Execute Bundle Production Deploy
+        env:
+          DATABRICKS_HOST: https://adb-prod.azuredatabricks.net
+          DATABRICKS_CLIENT_ID: ${{ secrets.PROD_SP_CLIENT_ID }}
+          DATABRICKS_CLIENT_SECRET: ${{ secrets.PROD_SP_CLIENT_SECRET }}
+        run: |
+          databricks bundle deploy -t prod</code></pre>
+        </div>
+
+    </div>
+</body>
+</html>

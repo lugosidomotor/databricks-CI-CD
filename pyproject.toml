@@ -1,0 +1,49 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dbx-cicd-sample"
+version = "0.1.0"
+description = "Tanulási célú Databricks Declarative Automation Bundle és CI/CD minta"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "DBX CI/CD sample contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+  "build>=1.2,<2",
+  "pytest>=8.3,<9",
+  "pytest-cov>=6,<8",
+  "ruff>=0.11,<1",
+]
+
+[project.scripts]
+bronze = "dbx_cicd_sample.tasks.bronze:main"
+silver = "dbx_cicd_sample.tasks.silver:main"
+gold = "dbx_cicd_sample.tasks.gold:main"
+quality = "dbx_cicd_sample.tasks.quality:main"
+report = "dbx_cicd_sample.tasks.report:main"
+secret-example = "dbx_cicd_sample.tasks.secret_example:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-q --cov=dbx_cicd_sample --cov-report=term-missing --cov-fail-under=85"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+omit = [
+  "src/dbx_cicd_sample/pipelines/*",
+  "src/dbx_cicd_sample/tasks/*",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

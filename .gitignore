@@ -1,0 +1,21 @@
+.DS_Store
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Databricks bundle state and local authentication
+.databricks/
+.env
+databrickscfg
+

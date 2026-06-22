@@ -1,0 +1,85 @@
+bundle:
+  name: dbx-cicd-sample
+  databricks_cli_version: ">=0.275.0"
+
+include:
+  - resources/*.yml
+
+artifacts:
+  default:
+    type: whl
+    path: .
+    build: python -m build --wheel
+
+variables:
+  catalog:
+    description: Meglévő Unity Catalog katalógus, amelybe a minta sémái kerülnek.
+    default: main
+  schema:
+    description: A wheel-alapú medallion job célsémája.
+    default: dbx_cicd_dev
+  pipeline_schema:
+    description: A deklaratív pipeline által kezelt célséma.
+    default: dbx_cicd_pipeline_dev
+  spark_version:
+    description: A job compute Databricks Runtime verziója.
+    default: 15.4.x-scala2.12
+  node_type_id:
+    description: Compute node típus; az alapérték Azure-höz készült.
+    default: Standard_D4s_v5
+  secret_scope:
+    description: A kézzel indítható secret-példa scope-ja.
+    default: dbx-cicd-sample
+  secret_key:
+    description: A kézzel indítható secret-példa kulcsa.
+    default: sample-secret
+  service_principal_id:
+    description: Staging/prod futtatási identitás application ID-ja; add át BUNDLE_VAR-ként.
+
+targets:
+  dev:
+    default: true
+    mode: development
+    variables:
+      schema: dbx_cicd_${workspace.current_user.short_name}
+      pipeline_schema: dbx_cicd_pipeline_${workspace.current_user.short_name}
+    presets:
+      tags:
+        environment: dev
+        managed_by: bundle
+
+  staging:
+    mode: production
+    workspace:
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+      service_principal_name: ${var.service_principal_id}
+    variables:
+      schema: dbx_cicd_staging
+      pipeline_schema: dbx_cicd_pipeline_staging
+    presets:
+      name_prefix: "[staging] "
+      tags:
+        environment: staging
+        managed_by: bundle
+
+  prod:
+    mode: production
+    workspace:
+      root_path: /Workspace/Shared/.bundle/${bundle.name}/${bundle.target}
+    run_as:
+      service_principal_name: ${var.service_principal_id}
+    variables:
+      schema: dbx_cicd_prod
+      pipeline_schema: dbx_cicd_pipeline_prod
+    presets:
+      name_prefix: "[prod] "
+      tags:
+        environment: prod
+        managed_by: bundle
+    resources:
+      jobs:
+        medallion_job:
+          schedule:
+            pause_status: UNPAUSED
+

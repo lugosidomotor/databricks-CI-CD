@@ -1,0 +1,89 @@
+resources:
+  jobs:
+    medallion_job:
+      name: dbx-cicd-sample-medallion
+      description: Bronze -> Silver -> Gold -> quality, egy megosztott job clusteren.
+      max_concurrent_runs: 1
+      tags:
+        layer: medallion
+        sample: "true"
+      parameters:
+        - name: catalog
+          default: ${var.catalog}
+        - name: schema
+          default: ${var.schema}
+        - name: run_id
+          default: "{{job.run_id}}"
+      schedule:
+        quartz_cron_expression: 0 0 6 * * ?
+        timezone_id: Europe/Budapest
+        pause_status: PAUSED
+      job_clusters:
+        - job_cluster_key: sample_cluster
+          new_cluster:
+            spark_version: ${var.spark_version}
+            node_type_id: ${var.node_type_id}
+            num_workers: 0
+            data_security_mode: SINGLE_USER
+            spark_conf:
+              spark.databricks.cluster.profile: singleNode
+              spark.master: local[*, 4]
+            custom_tags:
+              ResourceClass: SingleNode
+              project: dbx-cicd-sample
+      tasks:
+        - task_key: bronze
+          description: Determinisztikus minta rendelések betöltése Delta táblába.
+          job_cluster_key: sample_cluster
+          python_wheel_task:
+            package_name: dbx_cicd_sample
+            entry_point: bronze
+            parameters: &task_parameters
+              - --catalog
+              - "{{job.parameters.catalog}}"
+              - --schema
+              - "{{job.parameters.schema}}"
+              - --run-id
+              - "{{job.parameters.run_id}}"
+          libraries: &sample_wheel
+            - whl: ../dist/*.whl
+          max_retries: 1
+          min_retry_interval_millis: 10000
+
+        - task_key: silver
+          description: Típuskonverzió, validálás és deduplikáció.
+          depends_on:
+            - task_key: bronze
+          job_cluster_key: sample_cluster
+          python_wheel_task:
+            package_name: dbx_cicd_sample
+            entry_point: silver
+            parameters: *task_parameters
+          libraries: *sample_wheel
+          max_retries: 1
+          min_retry_interval_millis: 10000
+
+        - task_key: gold
+          description: Napi és országonkénti üzleti aggregáció.
+          depends_on:
+            - task_key: silver
+          job_cluster_key: sample_cluster
+          python_wheel_task:
+            package_name: dbx_cicd_sample
+            entry_point: gold
+            parameters: *task_parameters
+          libraries: *sample_wheel
+          max_retries: 1
+          min_retry_interval_millis: 10000
+
+        - task_key: quality
+          description: Fail-fast adatminőségi kapu a Gold tábla után.
+          depends_on:
+            - task_key: gold
+          job_cluster_key: sample_cluster
+          python_wheel_task:
+            package_name: dbx_cicd_sample
+            entry_point: quality
+            parameters: *task_parameters
+          libraries: *sample_wheel
+

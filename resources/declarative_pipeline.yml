@@ -1,0 +1,25 @@
+resources:
+  pipelines:
+    orders_declarative_pipeline:
+      name: dbx-cicd-sample-declarative-pipeline
+      catalog: ${var.catalog}
+      target: ${var.pipeline_schema}
+      serverless: true
+      photon: true
+      continuous: false
+      channel: CURRENT
+      libraries:
+        - notebook:
+            path: ../src/dbx_cicd_sample/pipelines/orders_pipeline.py
+
+  jobs:
+    pipeline_orchestrator_job:
+      name: dbx-cicd-sample-pipeline-orchestrator
+      description: Megmutatja, hogyan indít Lakeflow Jobs egy deklaratív pipeline-t.
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: refresh_declarative_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.orders_declarative_pipeline.id}
+            full_refresh: false
+
