@@ -8,9 +8,9 @@ Unity Catalog tables, and GitHub Actions automation.
 > Databricks now calls Asset Bundles **Declarative Automation Bundles**. The
 > `databricks bundle ...` commands remain unchanged.
 
-![Dashboard](docs/Képernyőfotó%202026-07-25%20-%2021.35.52.png)
+![Dashboard](docs/screenshot-1.png)
 
-![Részletes nézet](docs/Képernyőfotó%202026-07-25%20-%2021.37.00.png)
+![Részletes nézet](docs/screenshot-2.png)
 
 ## What this repository teaches
 
